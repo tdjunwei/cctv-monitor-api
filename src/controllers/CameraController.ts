@@ -10,7 +10,13 @@ const createCameraSchema = Joi.object({
   streamUrl: Joi.string().uri().required(),
   resolution: Joi.string().valid('720p', '1080p', '4K').required(),
   type: Joi.string().valid('indoor', 'outdoor').required(),
-  recordingEnabled: Joi.boolean().default(false)
+  recordingEnabled: Joi.boolean().default(false),
+  // ONVIF Support
+  onvifEnabled: Joi.boolean().default(false),
+  onvifHost: Joi.string().ip().optional().allow(null, ''),
+  onvifPort: Joi.number().integer().min(1).max(65535).default(80),
+  onvifUsername: Joi.string().min(1).max(255).optional().allow(null, ''),
+  onvifPassword: Joi.string().min(1).max(255).optional().allow(null, '')
 });
 
 const updateCameraSchema = Joi.object({
@@ -21,7 +27,15 @@ const updateCameraSchema = Joi.object({
   type: Joi.string().valid('indoor', 'outdoor'),
   recordingEnabled: Joi.boolean(),
   isOnline: Joi.boolean(),
-  lastMotionDetected: Joi.date()
+  lastMotionDetected: Joi.date(),
+  // ONVIF Support
+  onvifEnabled: Joi.boolean(),
+  onvifHost: Joi.string().ip().optional().allow(null, ''),
+  onvifPort: Joi.number().integer().min(1).max(65535),
+  onvifUsername: Joi.string().min(1).max(255).optional().allow(null, ''),
+  onvifPassword: Joi.string().min(1).max(255).optional().allow(null, ''),
+  onvifProfileToken: Joi.string().optional().allow(null, ''),
+  onvifCapabilities: Joi.object().optional().allow(null)
 });
 
 export class CameraController {
@@ -258,6 +272,195 @@ export class CameraController {
       const response: ApiResponse = {
         success: false,
         error: 'Failed to update camera status'
+      };
+      res.status(500).json(response);
+    }
+  }
+
+  // ONVIF Discovery endpoint
+  static async discoverONVIFDevices(req: Request, res: Response): Promise<void> {
+    try {
+      const { ONVIFService } = await import('../services');
+      const { timeout } = req.query;
+      
+      const discoveryTimeout = timeout ? parseInt(timeout as string) : 5000;
+      const result = await ONVIFService.discoverDevices(discoveryTimeout);
+      
+      const response: ApiResponse = {
+        success: true,
+        data: result,
+        message: `Found ${result.devices.length} ONVIF devices`
+      };
+      
+      res.json(response);
+    } catch (error) {
+      console.error('Error discovering ONVIF devices:', error);
+      const response: ApiResponse = {
+        success: false,
+        error: 'Failed to discover ONVIF devices'
+      };
+      res.status(500).json(response);
+    }
+  }
+
+  // Test ONVIF connection
+  static async testONVIFConnection(req: Request, res: Response): Promise<void> {
+    try {
+      const { ONVIFService } = await import('../services');
+      const { host, port, username, password } = req.body;
+      
+      if (!host || !username || !password) {
+        const response: ApiResponse = {
+          success: false,
+          error: 'Host, username, and password are required'
+        };
+        res.status(400).json(response);
+        return;
+      }
+      
+      const result = await ONVIFService.testConnection(
+        host,
+        port || 80,
+        { username, password }
+      );
+      
+      // Remove the device object from the response to avoid serialization issues
+      const { device, ...safeResult } = result;
+      
+      const response: ApiResponse = {
+        success: result.success,
+        data: safeResult,
+        message: result.success ? 'ONVIF connection successful' : 'ONVIF connection failed'
+      };
+      
+      if (!result.success) {
+        res.status(400).json(response);
+      } else {
+        res.json(response);
+      }
+    } catch (error) {
+      console.error('Error testing ONVIF connection:', error);
+      const response: ApiResponse = {
+        success: false,
+        error: 'Failed to test ONVIF connection'
+      };
+      res.status(500).json(response);
+    }
+  }
+
+  // Get ONVIF capabilities for a camera
+  static async getONVIFCapabilities(req: Request, res: Response): Promise<void> {
+    try {
+      const { ONVIFService } = await import('../services');
+      const { id } = req.params;
+      
+      const camera = await CameraModel.getById(id);
+      if (!camera) {
+        const response: ApiResponse = {
+          success: false,
+          error: 'Camera not found'
+        };
+        res.status(404).json(response);
+        return;
+      }
+      
+      if (!camera.onvifEnabled || !camera.onvifHost || !camera.onvifUsername || !camera.onvifPassword) {
+        const response: ApiResponse = {
+          success: false,
+          error: 'Camera does not have ONVIF configured'
+        };
+        res.status(400).json(response);
+        return;
+      }
+      
+      const device = await ONVIFService.connectDevice(
+        camera.onvifHost,
+        camera.onvifPort || 80,
+        { username: camera.onvifUsername, password: camera.onvifPassword }
+      );
+      
+      const capabilities = await ONVIFService.getDeviceCapabilities(device);
+      const profiles = await ONVIFService.getProfiles(device);
+      
+      const response: ApiResponse = {
+        success: true,
+        data: { capabilities, profiles },
+        message: 'Retrieved ONVIF capabilities successfully'
+      };
+      
+      res.json(response);
+    } catch (error) {
+      console.error('Error getting ONVIF capabilities:', error);
+      const response: ApiResponse = {
+        success: false,
+        error: 'Failed to get ONVIF capabilities'
+      };
+      res.status(500).json(response);
+    }
+  }
+
+  // Control PTZ (Pan-Tilt-Zoom)
+  static async controlPTZ(req: Request, res: Response): Promise<void> {
+    try {
+      const { ONVIFService } = await import('../services');
+      const { id } = req.params;
+      const { action, direction, speed } = req.body;
+      
+      const camera = await CameraModel.getById(id);
+      if (!camera) {
+        const response: ApiResponse = {
+          success: false,
+          error: 'Camera not found'
+        };
+        res.status(404).json(response);
+        return;
+      }
+      
+      if (!camera.onvifEnabled || !camera.onvifHost || !camera.onvifUsername || !camera.onvifPassword) {
+        const response: ApiResponse = {
+          success: false,
+          error: 'Camera does not have ONVIF configured'
+        };
+        res.status(400).json(response);
+        return;
+      }
+      
+      const device = await ONVIFService.connectDevice(
+        camera.onvifHost,
+        camera.onvifPort || 80,
+        { username: camera.onvifUsername, password: camera.onvifPassword }
+      );
+      
+      let result = false;
+      const profileToken = camera.onvifProfileToken;
+      
+      if (!profileToken) {
+        const response: ApiResponse = {
+          success: false,
+          error: 'No ONVIF profile token configured for camera'
+        };
+        res.status(400).json(response);
+        return;
+      }
+      
+      if (action === 'move' && direction) {
+        result = await ONVIFService.ptzMove(device, profileToken, direction, speed || 0.5);
+      } else if (action === 'stop') {
+        result = await ONVIFService.ptzStop(device, profileToken);
+      }
+      
+      const response: ApiResponse = {
+        success: result,
+        data: { action, direction, speed, result },
+        message: result ? 'PTZ command executed successfully' : 'PTZ command failed'
+      };
+      
+      res.json(response);
+    } catch (error) {
+      console.error('Error controlling PTZ:', error);
+      const response: ApiResponse = {
+        success: false,
+        error: 'Failed to control PTZ'
       };
       res.status(500).json(response);
     }

@@ -8,6 +8,14 @@ export interface Camera {
   recordingEnabled: boolean;
   resolution: string;
   type: 'indoor' | 'outdoor';
+  // ONVIF Support
+  onvifEnabled: boolean;
+  onvifHost?: string;
+  onvifPort?: number;
+  onvifUsername?: string;
+  onvifPassword?: string;
+  onvifProfileToken?: string;
+  onvifCapabilities?: any;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -84,11 +92,19 @@ export interface CreateCameraRequest {
   resolution: string;
   type: 'indoor' | 'outdoor';
   recordingEnabled?: boolean;
+  // ONVIF Support
+  onvifEnabled?: boolean;
+  onvifHost?: string;
+  onvifPort?: number;
+  onvifUsername?: string;
+  onvifPassword?: string;
 }
 
 export interface UpdateCameraRequest extends Partial<CreateCameraRequest> {
   isOnline?: boolean;
   lastMotionDetected?: Date;
+  onvifProfileToken?: string;
+  onvifCapabilities?: any;
 }
 
 export interface CreateRecordingRequest {
@@ -133,4 +149,42 @@ export interface AlertRow {
   isRead?: boolean;
   timestamp: Date;
   thumbnail?: string;
+}
+
+// ONVIF-specific types
+export interface ONVIFDevice {
+  urn: string;
+  name?: string;
+  host: string;
+  port: number;
+  xaddrs: string[];
+  scopes?: string[];
+  types?: string[];
+}
+
+export interface ONVIFProfile {
+  token: string;
+  name: string;
+  videoSourceConfiguration: any;
+  videoEncoderConfiguration: any;
+  ptzConfiguration?: any;
+}
+
+export interface ONVIFCapabilities {
+  device?: any;
+  media?: any;
+  ptz?: any;
+  imaging?: any;
+  analytics?: any;
+  events?: any;
+}
+
+export interface ONVIFCredentials {
+  username: string;
+  password: string;
+}
+
+export interface ONVIFDiscoveryResult {
+  devices: ONVIFDevice[];
+  error?: string;
 }

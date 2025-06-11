@@ -10,7 +10,13 @@ const sampleCameras = [
     is_online: true,
     recording_enabled: true,
     resolution: '1080p',
-    type: 'outdoor'
+    type: 'outdoor',
+    onvif_enabled: true,
+    onvif_host: '192.168.1.100',
+    onvif_port: 80,
+    onvif_username: 'admin',
+    onvif_password: 'admin123',
+    onvif_profile_token: 'profile_1'
   },
   {
     id: '2',
@@ -20,7 +26,13 @@ const sampleCameras = [
     is_online: true,
     recording_enabled: true,
     resolution: '720p',
-    type: 'indoor'
+    type: 'indoor',
+    onvif_enabled: false,
+    onvif_host: null,
+    onvif_port: null,
+    onvif_username: null,
+    onvif_password: null,
+    onvif_profile_token: null
   },
   {
     id: '3',
@@ -30,7 +42,13 @@ const sampleCameras = [
     is_online: false,
     recording_enabled: true,
     resolution: '4K',
-    type: 'outdoor'
+    type: 'outdoor',
+    onvif_enabled: true,
+    onvif_host: '192.168.1.102',
+    onvif_port: 80,
+    onvif_username: 'admin',
+    onvif_password: 'password',
+    onvif_profile_token: 'profile_2'
   },
   {
     id: '4',
@@ -40,7 +58,13 @@ const sampleCameras = [
     is_online: true,
     recording_enabled: false,
     resolution: '1080p',
-    type: 'indoor'
+    type: 'indoor',
+    onvif_enabled: false,
+    onvif_host: null,
+    onvif_port: null,
+    onvif_username: null,
+    onvif_password: null,
+    onvif_profile_token: null
   }
 ];
 
@@ -125,12 +149,17 @@ export async function seedDatabase(): Promise<boolean> {
       
       if ((existing as any[]).length === 0) {
         const insertQuery = `
-          INSERT INTO cameras (id, name, location, stream_url, is_online, recording_enabled, resolution, type)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          INSERT INTO cameras (
+            id, name, location, stream_url, is_online, recording_enabled, resolution, type,
+            onvif_enabled, onvif_host, onvif_port, onvif_username, onvif_password, onvif_profile_token
+          )
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
         await executeQuery(insertQuery, [
           camera.id, camera.name, camera.location, camera.stream_url,
-          camera.is_online, camera.recording_enabled, camera.resolution, camera.type
+          camera.is_online, camera.recording_enabled, camera.resolution, camera.type,
+          camera.onvif_enabled, camera.onvif_host, camera.onvif_port, 
+          camera.onvif_username, camera.onvif_password, camera.onvif_profile_token
         ]);
         console.log(`  ✓ Created camera: ${camera.name}`);
       } else {

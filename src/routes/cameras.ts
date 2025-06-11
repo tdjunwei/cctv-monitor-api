@@ -28,4 +28,10 @@ router.delete('/:id', CameraController.deleteCamera);
 // PATCH /api/cameras/:id/status - Update camera online status
 router.patch('/:id/status', CameraController.updateOnlineStatus);
 
+// ONVIF routes
+router.get('/onvif/discover', CameraController.discoverONVIFDevices);
+router.post('/onvif/test', CameraController.testONVIFConnection);
+router.get('/:id/onvif/capabilities', CameraController.getONVIFCapabilities);
+router.post('/:id/onvif/ptz', CameraController.controlPTZ);
+
 export default router;

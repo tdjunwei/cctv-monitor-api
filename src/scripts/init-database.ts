@@ -13,11 +13,20 @@ const createTables = [
     recording_enabled BOOLEAN DEFAULT TRUE,
     resolution VARCHAR(10) NOT NULL DEFAULT '1080p',
     type ENUM('indoor', 'outdoor') NOT NULL DEFAULT 'indoor',
+    -- ONVIF Support
+    onvif_enabled BOOLEAN DEFAULT FALSE,
+    onvif_host VARCHAR(255) NULL,
+    onvif_port INT DEFAULT 80,
+    onvif_username VARCHAR(255) NULL,
+    onvif_password VARCHAR(255) NULL,
+    onvif_profile_token VARCHAR(255) NULL,
+    onvif_capabilities JSON NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_cameras_type (type),
     INDEX idx_cameras_online (is_online),
-    INDEX idx_cameras_recording (recording_enabled)
+    INDEX idx_cameras_recording (recording_enabled),
+    INDEX idx_cameras_onvif (onvif_enabled)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 
   // Recordings table

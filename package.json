@@ -33,7 +33,9 @@
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
-    "mysql2": "^3.14.1"
+    "mysql2": "^3.14.1",
+    "node-onvif": "^0.1.7",
+    "onvif": "^0.8.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
