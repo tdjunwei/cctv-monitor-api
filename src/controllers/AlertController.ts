@@ -18,7 +18,15 @@ export class AlertController {
     try {
       const { cameraId, type, severity, isRead, limit, offset } = req.query;
       
-      const filters: any = {};
+      const filters: {
+        cameraId?: string;
+        type?: string;
+        severity?: string;
+        isRead?: boolean;
+        limit?: number;
+        offset?: number;
+      } = {};
+      
       if (cameraId) filters.cameraId = cameraId as string;
       if (type) filters.type = type as string;
       if (severity) filters.severity = severity as string;

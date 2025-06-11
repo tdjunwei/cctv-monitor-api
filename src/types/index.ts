@@ -60,7 +60,7 @@ export interface DashboardStats {
 }
 
 // API Response types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   message?: string;
@@ -107,5 +107,30 @@ export interface CreateAlertRequest {
   type: 'motion' | 'offline' | 'recording_failed' | 'storage_full';
   message: string;
   severity: 'low' | 'medium' | 'high';
+  thumbnail?: string;
+}
+
+// Database result types
+export interface DatabaseResult {
+  affectedRows: number;
+  insertId: number;
+  changedRows: number;
+}
+
+export interface DatabaseRow {
+  [key: string]: unknown;
+}
+
+export interface AlertRow {
+  id: string;
+  camera_id: string;
+  cameraId?: string;
+  cameraName?: string;
+  type: string;
+  message: string;
+  severity: string;
+  is_read: boolean;
+  isRead?: boolean;
+  timestamp: Date;
   thumbnail?: string;
 }

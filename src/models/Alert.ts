@@ -1,5 +1,5 @@
 import { executeQuery, getOne } from '../config/database';
-import { Alert, CreateAlertRequest } from '../types';
+import { Alert, CreateAlertRequest, DatabaseResult, AlertRow } from '../types';
 
 export class AlertModel {
   // Get all alerts with optional filters
@@ -21,7 +21,7 @@ export class AlertModel {
       WHERE 1=1
     `;
     
-    const params: any[] = [];
+    const params: unknown[] = [];
     
     if (filters?.cameraId) {
       query += ' AND a.camera_id = ?';
@@ -55,7 +55,7 @@ export class AlertModel {
       }
     }
     
-    const alerts = await executeQuery<any[]>(query, params);
+    const alerts = await executeQuery<AlertRow[]>(query, params);
     return alerts.map(this.transformFromDb);
   }
 
@@ -71,7 +71,7 @@ export class AlertModel {
       WHERE a.id = ?
     `;
     
-    const alert = await getOne<any>(query, [id]);
+    const alert = await getOne<AlertRow>(query, [id]);
     return alert ? this.transformFromDb(alert) : null;
   }
 
@@ -108,8 +108,8 @@ export class AlertModel {
   // Mark alert as read
   static async markAsRead(id: string): Promise<boolean> {
     const query = 'UPDATE alerts SET is_read = 1 WHERE id = ?';
-    const result = await executeQuery(query, [id]);
-    return (result as any).affectedRows > 0;
+    const result = await executeQuery<DatabaseResult>(query, [id]);
+    return result.affectedRows > 0;
   }
 
   // Mark multiple alerts as read
@@ -118,22 +118,22 @@ export class AlertModel {
     
     const placeholders = ids.map(() => '?').join(',');
     const query = `UPDATE alerts SET is_read = 1 WHERE id IN (${placeholders})`;
-    const result = await executeQuery(query, ids);
-    return (result as any).affectedRows;
+    const result = await executeQuery<DatabaseResult>(query, ids);
+    return result.affectedRows;
   }
 
   // Mark all alerts as read for a camera
   static async markAllAsReadForCamera(cameraId: string): Promise<number> {
     const query = 'UPDATE alerts SET is_read = 1 WHERE camera_id = ? AND is_read = 0';
-    const result = await executeQuery(query, [cameraId]);
-    return (result as any).affectedRows;
+    const result = await executeQuery<DatabaseResult>(query, [cameraId]);
+    return result.affectedRows;
   }
 
   // Delete alert
   static async delete(id: string): Promise<boolean> {
     const query = 'DELETE FROM alerts WHERE id = ?';
-    const result = await executeQuery(query, [id]);
-    return (result as any).affectedRows > 0;
+    const result = await executeQuery<DatabaseResult>(query, [id]);
+    return result.affectedRows > 0;
   }
 
   // Get unread alerts count
@@ -160,7 +160,7 @@ export class AlertModel {
       LIMIT ?
     `;
     
-    const alerts = await executeQuery<any[]>(query, [yesterday, limit]);
+    const alerts = await executeQuery<AlertRow[]>(query, [yesterday, limit]);
     return alerts.map(this.transformFromDb);
   }
 
@@ -201,15 +201,15 @@ export class AlertModel {
   }
 
   // Transform database row to Alert interface
-  private static transformFromDb(row: any): Alert {
+  private static transformFromDb(row: AlertRow): Alert {
     return {
       id: row.id,
-      cameraId: row.cameraId,
+      cameraId: row.cameraId || row.camera_id,
       cameraName: row.cameraName || 'Unknown Camera',
-      type: row.type,
+      type: row.type as Alert['type'],
       message: row.message,
-      severity: row.severity,
-      isRead: Boolean(row.isRead),
+      severity: row.severity as Alert['severity'],
+      isRead: Boolean(row.isRead ?? row.is_read),
       timestamp: new Date(row.timestamp),
       thumbnail: row.thumbnail
     };

@@ -33,9 +33,9 @@ export async function testConnection(): Promise<boolean> {
 }
 
 // Execute query helper function
-export async function executeQuery<T = any>(
+export async function executeQuery<T = unknown>(
   query: string,
-  params: any[] = []
+  params: unknown[] = []
 ): Promise<T> {
   try {
     const [results] = await pool.execute(query, params);
@@ -47,9 +47,9 @@ export async function executeQuery<T = any>(
 }
 
 // Get single row helper
-export async function getOne<T = any>(
+export async function getOne<T = unknown>(
   query: string,
-  params: any[] = []
+  params: unknown[] = []
 ): Promise<T | null> {
   const results = await executeQuery<T[]>(query, params);
   return results.length > 0 ? results[0] : null;
