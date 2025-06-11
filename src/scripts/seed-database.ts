@@ -30,7 +30,7 @@ const sampleCameras = [
     onvif_enabled: true,
     onvif_host: '192.168.68.102',
     onvif_port: 80,
-    onvif_username: 'admin',
+    onvif_username: '102364111',
     onvif_password: '95_Junwei',
     onvif_profile_token: 'profile_1'
   },
@@ -38,7 +38,7 @@ const sampleCameras = [
     id: '3',
     name: 'Store Room',
     location: 'Storage Area',
-    stream_url: 'rtsp://192.168.68.100:554/stream1',
+    stream_url: 'rtsp://102537947:hv8UJPnJ@192.168.68.100:554/cam/realmonitor?channel=1&subtype=0',
     is_online: true,
     recording_enabled: true,
     resolution: '1080p',

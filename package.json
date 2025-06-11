@@ -12,7 +12,14 @@
     "db:init": "ts-node src/scripts/init-database.ts",
     "db:seed": "ts-node src/scripts/seed-database.ts",
     "db:reset": "ts-node src/scripts/reset-database.ts",
-    "db:reset-init": "ts-node src/scripts/reset-and-init.ts"
+    "db:reset-init": "ts-node src/scripts/reset-and-init.ts",
+    "camera:add": "ts-node src/scripts/add-rtsp-camera.ts",
+    "ffmpeg:test": "ts-node src/scripts/ffmpeg-cli.ts test-stream",
+    "ffmpeg:stream": "ts-node src/scripts/ffmpeg-cli.ts start-hls",
+    "ffmpeg:record": "ts-node src/scripts/ffmpeg-cli.ts record",
+    "ffmpeg:thumbnail": "ts-node src/scripts/ffmpeg-cli.ts thumbnail",
+    "ffmpeg:list": "ts-node src/scripts/ffmpeg-cli.ts list-streams",
+    "ffmpeg:stop": "ts-node src/scripts/ffmpeg-cli.ts stop-stream"
   },
   "keywords": [
     "cctv",
@@ -26,6 +33,7 @@
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^3.0.2",
+    "commander": "^14.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",

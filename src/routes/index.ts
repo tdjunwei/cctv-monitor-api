@@ -3,6 +3,7 @@ import cameraRoutes from './cameras';
 import alertRoutes from './alerts';
 import recordingRoutes from './recordings';
 import dashboardRoutes from './dashboard';
+import streamRoutes from './streams';
 
 const router = Router();
 
@@ -14,6 +15,7 @@ router.use(`/${API_VERSION}/cameras`, cameraRoutes);
 router.use(`/${API_VERSION}/alerts`, alertRoutes);
 router.use(`/${API_VERSION}/recordings`, recordingRoutes);
 router.use(`/${API_VERSION}/dashboard`, dashboardRoutes);
+router.use(`/${API_VERSION}/streams`, streamRoutes);
 
 // Health check endpoint
 router.get('/health', (req, res) => {

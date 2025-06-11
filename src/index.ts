@@ -4,13 +4,16 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
+import path from 'path';
 
 import { errorHandler, notFoundHandler } from './middleware';
 import cameraRoutes from './routes/cameras';
 import recordingRoutes from './routes/recordings';
 import alertRoutes from './routes/alerts';
 import dashboardRoutes from './routes/dashboard';
+import streamRoutes from './routes/streams';
 import { testConnection } from './config/database';
+import { FFmpegService } from './services/FFmpegService';
 
 // Load environment variables
 dotenv.config();
@@ -35,6 +38,11 @@ app.use(morgan('combined')); // Logging
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(limiter);
+
+// Static file serving for streams and thumbnails
+app.use('/streams', express.static(path.join(__dirname, '../public/streams')));
+app.use('/thumbnails', express.static(path.join(__dirname, '../public/thumbnails')));
+app.use('/recordings', express.static(path.join(__dirname, '../recordings')));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -68,6 +76,7 @@ app.use('/api/cameras', cameraRoutes);
 app.use('/api/recordings', recordingRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/streams', streamRoutes);
 
 // 404 handler
 app.use(notFoundHandler);
@@ -108,11 +117,13 @@ process.on('unhandledRejection', (reason, promise) => {
 // Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('SIGTERM received, shutting down gracefully');
+  FFmpegService.getInstance().cleanup();
   process.exit(0);
 });
 
 process.on('SIGINT', () => {
   console.log('SIGINT received, shutting down gracefully');
+  FFmpegService.getInstance().cleanup();
   process.exit(0);
 });
 

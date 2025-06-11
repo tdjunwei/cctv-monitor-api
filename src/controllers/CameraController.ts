@@ -309,6 +309,8 @@ export class CameraController {
       const { ONVIFService } = await import('../services');
       const { host, port, username, password } = req.body;
       
+      console.log(`🧪 ONVIF Test Request - Host: ${host}, Port: ${port || 80}, Username: ${username}`);
+      
       if (!host || !username || !password) {
         const response: ApiResponse = {
           success: false,
@@ -327,10 +329,12 @@ export class CameraController {
       // Remove the device object from the response to avoid serialization issues
       const { device, ...safeResult } = result;
       
+      console.log(`🧪 ONVIF Test Result:`, JSON.stringify(safeResult, null, 2));
+      
       const response: ApiResponse = {
         success: result.success,
         data: safeResult,
-        message: result.success ? 'ONVIF connection successful' : 'ONVIF connection failed'
+        message: result.success ? 'ONVIF connection successful' : `ONVIF connection failed: ${result.error || 'Unknown error'}`
       };
       
       if (!result.success) {
@@ -339,10 +343,10 @@ export class CameraController {
         res.json(response);
       }
     } catch (error) {
-      console.error('Error testing ONVIF connection:', error);
+      console.error('❌ Error testing ONVIF connection:', error);
       const response: ApiResponse = {
         success: false,
-        error: 'Failed to test ONVIF connection'
+        error: `Failed to test ONVIF connection: ${error instanceof Error ? error.message : 'Unknown error'}`
       };
       res.status(500).json(response);
     }
